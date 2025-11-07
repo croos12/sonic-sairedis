@@ -1261,7 +1261,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
-            static PerformanceIntervalTimer timer("Syncd::processBulkCreateEntry(route_entry) CREATE");
+            static PerformanceIntervalTimer timer("Syncd::processBulkCreateEntry(%s) CREATE", sai_serialize_object_type(objectType).c_str());
 
             timer.start();
 
