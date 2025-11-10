@@ -37,6 +37,7 @@
 
 #include <iterator>
 #include <algorithm>
+#include <sstream>
 
 #define DEF_SAI_WARM_BOOT_DATA_FILE "/var/warmboot/sai-warmboot.bin"
 #define SAI_FAILURE_DUMP_SCRIPT "/usr/bin/sai_failure_dump.sh"
@@ -1248,7 +1249,13 @@ sai_status_t Syncd::processBulkCreateEntry(
         attr_counts[idx] = attributes[idx]->get_attr_count();
         attr_lists[idx] = attributes[idx]->get_attr_list();
     }
-
+    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::ostringstream oss;
+    oss << "Syncd::processBulkCreateEntry(" << objectTypeStr << ") CREATE";
+    const std::string timerName = oss.str();
+    
+    static PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -1262,10 +1269,6 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
-            static PerformanceIntervalTimer timer("Syncd::processBulkCreateEntry(route_entry) CREATE");
-
-            timer.start();
-
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1273,10 +1276,6 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
-            timer.stop();
-
-            timer.inc(object_count);
         }
         break;
 
@@ -1607,6 +1606,10 @@ sai_status_t Syncd::processBulkCreateEntry(
         default:
             return SAI_STATUS_NOT_SUPPORTED;
     }
+
+    timer.stop();
+
+    timer.inc(object_count);
 
     return status;
 }
@@ -1629,7 +1632,13 @@ sai_status_t Syncd::processBulkRemoveEntry(
     }
 
     sai_bulk_op_error_mode_t mode = SAI_BULK_OP_ERROR_MODE_IGNORE_ERROR;
-
+    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::ostringstream oss;
+    oss << "Syncd::processBulkRemoveEntry(" << objectTypeStr << ") REMOVE";
+    const std::string timerName = oss.str();
+    
+    static PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -1949,6 +1958,10 @@ sai_status_t Syncd::processBulkRemoveEntry(
         default:
             return SAI_STATUS_NOT_SUPPORTED;
     }
+
+    timer.stop();
+
+    timer.inc(object_count);
 
     return status;
 }
@@ -1980,6 +1993,13 @@ sai_status_t Syncd::processBulkSetEntry(
         attr_lists.push_back(attributes[it]->get_attr_list()[0]);
     }
 
+    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::ostringstream oss;
+    oss << "Syncd::processBulkSetEntry(" << objectTypeStr << ") SET";
+    const std::string timerName = oss.str();
+    
+    static PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -2109,6 +2129,10 @@ sai_status_t Syncd::processBulkSetEntry(
         default:
             return SAI_STATUS_NOT_SUPPORTED;
     }
+
+    timer.stop();
+
+    timer.inc(object_count);
 
     return status;
 }
@@ -2173,6 +2197,13 @@ sai_status_t Syncd::processBulkEntry(
 
         metaKey.objecttype = objectType;
 
+        const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+        std::ostringstream oss;
+        oss << "Syncd::processBulkEntry(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+        const std::string timerName = oss.str();
+        
+        static PerformanceIntervalTimer timer(timerName.c_str());
+        timer.start();
         switch ((int)objectType)
         {
             case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -2250,15 +2281,7 @@ sai_status_t Syncd::processBulkEntry(
         {
             if (objectType == SAI_OBJECT_TYPE_ROUTE_ENTRY)
             {
-                static PerformanceIntervalTimer timer("Syncd::processBulkEntry::processEntry(route_entry) CREATE");
-
-                timer.start();
-
                 status = processEntry(metaKey, SAI_COMMON_API_CREATE, attr_count, attr_list);
-
-                timer.stop();
-
-                timer.inc();
             }
             else
             {
@@ -2291,6 +2314,10 @@ sai_status_t Syncd::processBulkEntry(
         }
 
         statuses[idx] = status;
+
+        timer.stop();
+
+        timer.inc();
     }
 
     sendApiResponse(api, all, (uint32_t)objectIds.size(), statuses.data());
