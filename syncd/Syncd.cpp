@@ -1253,7 +1253,7 @@ sai_status_t Syncd::processBulkCreateEntry(
     oss << "Syncd::processBulkCreateEntry(" << objectTypeStr << ") CREATE";
     const std::string timerName = oss.str();
     
-    static PerformanceIntervalTimer timer(timerName.c_str());
+    PerformanceIntervalTimer timer(timerName.c_str());
     timer.start();
     switch ((int)objectType)
     {
@@ -1636,7 +1636,7 @@ sai_status_t Syncd::processBulkRemoveEntry(
     oss << "Syncd::processBulkRemoveEntry(" << objectTypeStr << ") REMOVE";
     const std::string timerName = oss.str();
     
-    static PerformanceIntervalTimer timer(timerName.c_str());
+    PerformanceIntervalTimer timer(timerName.c_str());
     timer.start();
     switch ((int)objectType)
     {
@@ -1997,7 +1997,7 @@ sai_status_t Syncd::processBulkSetEntry(
     oss << "Syncd::processBulkSetEntry(" << objectTypeStr << ") SET";
     const std::string timerName = oss.str();
     
-    static PerformanceIntervalTimer timer(timerName.c_str());
+    PerformanceIntervalTimer timer(timerName.c_str());
     timer.start();
     switch ((int)objectType)
     {
@@ -2201,7 +2201,7 @@ sai_status_t Syncd::processBulkEntry(
         oss << "Syncd::processBulkEntry(" << objectTypeStr << ") " << sai_serialize_common_api(api);
         const std::string timerName = oss.str();
         
-        static PerformanceIntervalTimer timer(timerName.c_str());
+        PerformanceIntervalTimer timer(timerName.c_str());
         timer.start();
         switch ((int)objectType)
         {
