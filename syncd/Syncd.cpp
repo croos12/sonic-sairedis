@@ -209,7 +209,11 @@ Syncd::Syncd(
 
     m_test_services = m_smt.getServiceMethodTable();
 
+    static PerformanceIntervalTimer timerApiInit("Syncd::constructor::apiInitialize");
+    timerApiInit.start();
     sai_status_t status = vendorSai->apiInitialize(0, &m_test_services);
+    timerApiInit.stop();
+    timerApiInit.inc();
 
     if (status != SAI_STATUS_SUCCESS)
     {
@@ -223,7 +227,11 @@ Syncd::Syncd(
 
     sai_api_version_t apiVersion = SAI_VERSION(0,0,0); // invalid version
 
+    static PerformanceIntervalTimer timerQueryApi("Syncd::constructor::queryApiVersion");
+    timerQueryApi.start();
     status = m_vendorSai->queryApiVersion(&apiVersion);
+    timerQueryApi.stop();
+    timerQueryApi.inc();
 
     if (status != SAI_STATUS_SUCCESS)
     {
@@ -468,7 +476,11 @@ sai_status_t Syncd::processAttrCapabilityQuery(
 
     sai_attr_capability_t capability;
 
+    static PerformanceIntervalTimer timer("Syncd::processAttrCapabilityQuery::queryAttributeCapability");
+    timer.start();
     sai_status_t status = m_vendorSai->queryAttributeCapability(switchRid, objectType, attrId, &capability);
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -528,7 +540,11 @@ sai_status_t Syncd::processAttrEnumValuesCapabilityQuery(
     enumCapList.count = list_size;
     enumCapList.list = enum_capabilities_list.data();
 
+    static PerformanceIntervalTimer timer("Syncd::processAttrEnumValuesCapabilityQuery::queryAttributeEnumValuesCapability");
+    timer.start();
     sai_status_t status = m_vendorSai->queryAttributeEnumValuesCapability(switchRid, objectType, attrId, &enumCapList);
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -598,12 +614,16 @@ sai_status_t Syncd::processObjectTypeGetAvailabilityQuery(
 
     uint64_t count;
 
+    static PerformanceIntervalTimer timer("Syncd::processObjectTypeGetAvailabilityQuery::objectTypeGetAvailability");
+    timer.start();
     sai_status_t status = m_vendorSai->objectTypeGetAvailability(
             switchRid,
             objectType,
             attr_count,
             attr_list,
             &count);
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -654,7 +674,11 @@ sai_status_t Syncd::processStatsCapabilityQuery(
     statCapList.count = list_size;
     statCapList.list = stat_capability_list.data();
 
+    static PerformanceIntervalTimer timer("Syncd::processStatsCapabilityQuery::queryStatsCapability");
+    timer.start();
     sai_status_t status = m_vendorSai->queryStatsCapability(switchRid, objectType, &statCapList);
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -734,7 +758,11 @@ sai_status_t Syncd::processStatsStCapabilityQuery(
     statCapList.count = list_size;
     statCapList.list = stat_capability_list.data();
 
+    static PerformanceIntervalTimer timer("Syncd::processStatsStCapabilityQuery::queryStatsStCapability");
+    timer.start();
     sai_status_t status = m_vendorSai->queryStatsStCapability(switchRid, objectType, &statCapList);
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -818,7 +846,11 @@ sai_status_t Syncd::processFdbFlush(
 
     m_translator->translateVidToRid(SAI_OBJECT_TYPE_FDB_FLUSH, attr_count, attr_list);
 
+    static PerformanceIntervalTimer timer("Syncd::processFdbFlush::flushFdbEntries");
+    timer.start();
     sai_status_t status = m_vendorSai->flushFdbEntries(switchRid, attr_count, attr_list);
+    timer.stop();
+    timer.inc();
 
     m_selectableChannel->set(sai_serialize_status(status), {} , REDIS_ASIC_STATE_COMMAND_FLUSHRESPONSE);
 
@@ -916,11 +948,15 @@ sai_status_t Syncd::processClearStatsEvent(
         counter_ids.push_back(val);
     }
 
+    static PerformanceIntervalTimer timer("Syncd::processClearStatsEvent::clearStats");
+    timer.start();
     auto status = m_vendorSai->clearStats(
             metaKey.objecttype,
             metaKey.objectkey.key.object_id,
             (uint32_t)counter_ids.size(),
             counter_ids.data());
+    timer.stop();
+    timer.inc();
 
     m_selectableChannel->set(sai_serialize_status(status), {}, REDIS_ASIC_STATE_COMMAND_GETRESPONSE);
 
@@ -969,12 +1005,16 @@ sai_status_t Syncd::processGetStatsEvent(
 
     std::vector<uint64_t> result(counter_ids.size());
 
+    static PerformanceIntervalTimer timer("Syncd::processGetStatsEvent::getStats");
+    timer.start();
     auto status = m_vendorSai->getStats(
             metaKey.objecttype,
             metaKey.objectkey.key.object_id,
             (uint32_t)counter_ids.size(),
             counter_ids.data(),
             result.data());
+    timer.stop();
+    timer.inc();
 
     std::vector<swss::FieldValueTuple> entry;
 
@@ -2395,15 +2435,23 @@ sai_status_t Syncd::processBulkOidCreate(
 
     std::vector<sai_object_id_t> objectRids(object_count);
 
-    status = m_vendorSai->bulkCreate(
-                                objectType,
-                                switchRid,
-                                object_count,
-                                attr_counts.data(),
-                                attr_lists.data(),
-                                mode,
-                                objectRids.data(),
-                                statuses.data());
+    {
+        std::ostringstream oss;
+        oss << "Syncd::processBulkOidCreate(" << sai_serialize_object_type(objectType) << ") BULK_CREATE";
+        PerformanceIntervalTimer timer(oss.str().c_str());
+        timer.start();
+        status = m_vendorSai->bulkCreate(
+                                    objectType,
+                                    switchRid,
+                                    object_count,
+                                    attr_counts.data(),
+                                    attr_lists.data(),
+                                    mode,
+                                    objectRids.data(),
+                                    statuses.data());
+        timer.stop();
+        timer.inc(object_count);
+    }
 
     if (status == SAI_STATUS_NOT_IMPLEMENTED || status == SAI_STATUS_NOT_SUPPORTED)
     {
@@ -2477,13 +2525,21 @@ sai_status_t Syncd::processBulkOidSet(
         attr_list[idx] = *attributes[idx]->get_attr_list();
     }
 
-    status = m_vendorSai->bulkSet(
-                                objectType,
-                                object_count,
-                                objectRids.data(),
-                                attr_list.data(),
-                                mode,
-                                statuses.data());
+    {
+        std::ostringstream oss;
+        oss << "Syncd::processBulkOidSet(" << sai_serialize_object_type(objectType) << ") BULK_SET";
+        PerformanceIntervalTimer timer(oss.str().c_str());
+        timer.start();
+        status = m_vendorSai->bulkSet(
+                                    objectType,
+                                    object_count,
+                                    objectRids.data(),
+                                    attr_list.data(),
+                                    mode,
+                                    statuses.data());
+        timer.stop();
+        timer.inc(object_count);
+    }
 
     if (status == SAI_STATUS_NOT_IMPLEMENTED || status == SAI_STATUS_NOT_SUPPORTED)
     {
@@ -2526,13 +2582,24 @@ sai_status_t Syncd::processBulkOidGet(
         attr_lists[idx] = attributes[idx]->get_attr_list();
     }
 
-    const auto status = m_vendorSai->bulkGet(objectType,
+    sai_status_t status = SAI_STATUS_SUCCESS;
+
+    {
+        std::ostringstream oss;
+        oss << "Syncd::processBulkOidGet(" << sai_serialize_object_type(objectType) << ") BULK_GET";
+        PerformanceIntervalTimer timer(oss.str().c_str());
+        timer.start();
+        const auto status_local = m_vendorSai->bulkGet(objectType,
                                              object_count,
                                              objectRids.data(),
                                              attr_counts.data(),
                                              attr_lists.data(),
                                              mode,
                                              statuses.data());
+        timer.stop();
+        timer.inc(object_count);
+        status = status_local;
+    }
 
     if (status == SAI_STATUS_NOT_IMPLEMENTED || status == SAI_STATUS_NOT_SUPPORTED)
     {
@@ -2576,12 +2643,20 @@ sai_status_t Syncd::processBulkOidRemove(
         }
     }
 
-    status = m_vendorSai->bulkRemove(
-                                objectType,
-                                (uint32_t)object_count,
-                                objectRids.data(),
-                                mode,
-                                statuses.data());
+    {
+        std::ostringstream oss;
+        oss << "Syncd::processBulkOidRemove(" << sai_serialize_object_type(objectType) << ") BULK_REMOVE";
+        PerformanceIntervalTimer timer(oss.str().c_str());
+        timer.start();
+        status = m_vendorSai->bulkRemove(
+                                    objectType,
+                                    (uint32_t)object_count,
+                                    objectRids.data(),
+                                    mode,
+                                    statuses.data());
+        timer.stop();
+        timer.inc(object_count);
+    }
 
     if (status == SAI_STATUS_NOT_IMPLEMENTED || status == SAI_STATUS_NOT_SUPPORTED)
     {
@@ -3561,7 +3636,14 @@ sai_status_t Syncd::processQuadEvent(
         }
         else
         {
+            std::ostringstream oss;
+            oss << "Syncd::processQuadEvent::processEntry(" << sai_serialize_object_type(metaKey.objecttype) << ") "
+                << sai_serialize_common_api(api);
+            PerformanceIntervalTimer timer(oss.str().c_str());
+            timer.start();
             status = processEntry(metaKey, api, attr_count, attr_list);
+            timer.stop();
+            timer.inc();
         }
     }
     else
@@ -3708,7 +3790,13 @@ sai_status_t Syncd::processOidCreate(
 
     sai_object_id_t objectRid;
 
+    std::ostringstream ossCreate;
+    ossCreate << "Syncd::processOidCreate(" << sai_serialize_object_type(objectType) << ") CREATE";
+    PerformanceIntervalTimer timerCreate(ossCreate.str().c_str());
+    timerCreate.start();
     sai_status_t status = m_vendorSai->create(objectType, &objectRid, switchRid, attr_count, attr_list);
+    timerCreate.stop();
+    timerCreate.inc();
 
     if (status == SAI_STATUS_SUCCESS)
     {
@@ -3764,7 +3852,13 @@ sai_status_t Syncd::processOidRemove(
         m_switches.at(switchVid)->collectPortRelatedObjects(rid);
     }
 
+    std::ostringstream ossRemove;
+    ossRemove << "Syncd::processOidRemove(" << sai_serialize_object_type(objectType) << ") REMOVE";
+    PerformanceIntervalTimer timerRemove(ossRemove.str().c_str());
+    timerRemove.start();
     sai_status_t status = m_vendorSai->remove(objectType, rid);
+    timerRemove.stop();
+    timerRemove.inc();
 
     if (status == SAI_STATUS_SUCCESS)
     {
@@ -3839,7 +3933,13 @@ sai_status_t Syncd::processOidSet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
+    std::ostringstream ossSet;
+    ossSet << "Syncd::processOidSet(" << sai_serialize_object_type(objectType) << ") SET";
+    PerformanceIntervalTimer timerSet(ossSet.str().c_str());
+    timerSet.start();
     sai_status_t status = m_vendorSai->set(objectType, rid, attr);
+    timerSet.stop();
+    timerSet.inc();
 
     if (Workaround::isSetAttributeWorkaround(objectType, attr->id, status))
     {
@@ -3862,7 +3962,14 @@ sai_status_t Syncd::processOidGet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
-    return m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    std::ostringstream ossGet;
+    ossGet << "Syncd::processOidGet(" << sai_serialize_object_type(objectType) << ") GET";
+    PerformanceIntervalTimer timerGet(ossGet.str().c_str());
+    timerGet.start();
+    auto status = m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    timerGet.stop();
+    timerGet.inc();
+    return status;
 }
 
 const char* Syncd::profileGetValue(
@@ -4691,6 +4798,7 @@ sai_status_t Syncd::onApplyViewInFastFastBoot()
 
     sai_status_t all = SAI_STATUS_SUCCESS;
 
+    static PerformanceIntervalTimer timer("Syncd::onApplyViewInFastFastBoot::set(FAST_API_ENABLE=false)");
     for (auto& kvp: m_switches)
     {
         sai_attribute_t attr;
@@ -4698,7 +4806,10 @@ sai_status_t Syncd::onApplyViewInFastFastBoot()
         attr.id = SAI_SWITCH_ATTR_FAST_API_ENABLE;
         attr.value.booldata = false;
 
+        timer.start();
         sai_status_t status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, kvp.second->getRid(), &attr);
+        timer.stop();
+        timer.inc();
 
         if (status != SAI_STATUS_SUCCESS)
         {
@@ -5304,7 +5415,11 @@ void Syncd::performWarmRestartSingleSwitch(
     {
         SWSS_LOG_TIMER("Warm boot: create switch VID: %s", sai_serialize_object_id(switchVid).c_str());
 
+        static PerformanceIntervalTimer timer("Syncd::performWarmRestartSingleSwitch::create(SWITCH)");
+        timer.start();
         status = m_vendorSai->create(SAI_OBJECT_TYPE_SWITCH, &switchRid, 0, (uint32_t)attrs.size(), attrs.data());
+        timer.stop();
+        timer.inc();
     }
 
     if (status != SAI_STATUS_SUCCESS)
@@ -5391,7 +5506,11 @@ void Syncd::diagShellThreadProc(
         attr.id = SAI_SWITCH_ATTR_SWITCH_SHELL_ENABLE;
         attr.value.booldata = true;
 
+        static PerformanceIntervalTimer timer("Syncd::diagShellThreadProc::set(SWITCH_SHELL_ENABLE=true)");
+        timer.start();
         status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, switchRid, &attr);
+        timer.stop();
+        timer.inc();
 
         if (status != SAI_STATUS_SUCCESS)
         {
@@ -5474,7 +5593,11 @@ void Syncd::saiLoglevelNotify(
         sai_api_t api;
         sai_deserialize_api(strApi, api);
 
+        static PerformanceIntervalTimer timer("Syncd::saiLoglevelNotify::logSet");
+        timer.start();
         sai_status_t status = m_vendorSai->logSet(api, logLevel);
+        timer.stop();
+        timer.inc();
 
         if (status == SAI_STATUS_SUCCESS)
         {
@@ -5558,13 +5681,17 @@ sai_status_t Syncd::setRestartWarmOnAllSwitches(
     attr.id = SAI_SWITCH_ATTR_RESTART_WARM;
     attr.value.booldata = flag;
 
+    static PerformanceIntervalTimer timer("Syncd::setRestartWarmOnAllSwitches::set(RESTART_WARM)");
     for (auto& sw: m_switches)
     {
         auto rid = sw.second->getRid();
 
         auto strRid = sai_serialize_object_id(rid);
 
+        timer.start();
         auto status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, rid, &attr);
+        timer.stop();
+        timer.inc();
 
         if (status != SAI_STATUS_SUCCESS)
         {
@@ -5591,13 +5718,17 @@ sai_status_t Syncd::setFastAPIEnableOnAllSwitches()
     attr.id = SAI_SWITCH_ATTR_FAST_API_ENABLE;
     attr.value.booldata = true;
 
+    static PerformanceIntervalTimer timer("Syncd::setFastAPIEnableOnAllSwitches::set(FAST_API_ENABLE=true)");
     for (auto& sw: m_switches)
     {
         auto rid = sw.second->getRid();
 
         auto strRid = sai_serialize_object_id(rid);
 
+        timer.start();
         auto status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, rid, &attr);
+        timer.stop();
+        timer.inc();
 
         if (status != SAI_STATUS_SUCCESS)
         {
@@ -5624,13 +5755,17 @@ sai_status_t Syncd::setPreShutdownOnAllSwitches()
     attr.id = SAI_SWITCH_ATTR_PRE_SHUTDOWN;
     attr.value.booldata = true;
 
+    static PerformanceIntervalTimer timer("Syncd::setPreShutdownOnAllSwitches::set(PRE_SHUTDOWN=true)");
     for (auto& sw: m_switches)
     {
         auto rid = sw.second->getRid();
 
         auto strRid = sai_serialize_object_id(rid);
 
+        timer.start();
         auto status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, rid, &attr);
+        timer.stop();
+        timer.inc();
 
         if (status != SAI_STATUS_SUCCESS)
         {
@@ -5668,10 +5803,14 @@ sai_status_t Syncd::setUninitDataPlaneOnRemovalOnAllSwitches()
 
         sai_status_t queryStatus;
 
+        static PerformanceIntervalTimer timerQuery("Syncd::setUninitDataPlaneOnRemovalOnAllSwitches::queryAttributeCapability");
+        timerQuery.start();
         queryStatus = m_vendorSai->queryAttributeCapability(rid,
                                                      SAI_OBJECT_TYPE_SWITCH,
                                                      SAI_SWITCH_ATTR_UNINIT_DATA_PLANE_ON_REMOVAL,
                                                      &attr_capability);
+        timerQuery.stop();
+        timerQuery.inc();
         if (queryStatus != SAI_STATUS_SUCCESS)
         {
             SWSS_LOG_ERROR("Failed to get SAI_SWITCH_ATTR_UNINIT_DATA_PLANE_ON_REMOVAL capabilities: %s:%s",
@@ -5684,7 +5823,11 @@ sai_status_t Syncd::setUninitDataPlaneOnRemovalOnAllSwitches()
 
         if (attr_capability.set_implemented)
         {
+            static PerformanceIntervalTimer timerSet("Syncd::setUninitDataPlaneOnRemovalOnAllSwitches::set(UNINIT_DATA_PLANE_ON_REMOVAL=false)");
+            timerSet.start();
             auto status = m_vendorSai->set(SAI_OBJECT_TYPE_SWITCH, rid, &attr);
+            timerSet.stop();
+            timerSet.inc();
 
             if (status != SAI_STATUS_SUCCESS)
             {
@@ -5987,7 +6130,11 @@ void Syncd::run()
 
     SWSS_LOG_NOTICE("calling api uninitialize");
 
+    static PerformanceIntervalTimer timerApiUninit("Syncd::run::apiUninitialize");
+    timerApiUninit.start();
     status = m_vendorSai->apiUninitialize();
+    timerApiUninit.stop();
+    timerApiUninit.inc();
 
     if (status != SAI_STATUS_SUCCESS)
     {
