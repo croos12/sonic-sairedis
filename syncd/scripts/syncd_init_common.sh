@@ -480,7 +480,7 @@ config_syncd_vs()
         fi
     fi
 
-    CMD_ARGS+=" -l -p $HWSKU_DIR/sai.profile"
+    CMD_ARGS+=" -l -p $HWSKU_DIR/sai.profile -v"
 }
 
 vpp_api_check()
