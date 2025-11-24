@@ -1249,7 +1249,7 @@ sai_status_t Syncd::processBulkCreateEntry(
         attr_counts[idx] = attributes[idx]->get_attr_count();
         attr_lists[idx] = attributes[idx]->get_attr_list();
     }
-    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
     std::ostringstream oss;
     oss << "Syncd::processBulkCreateEntry(" << objectTypeStr << ") CREATE";
     const std::string timerName = oss.str();
@@ -1632,7 +1632,7 @@ sai_status_t Syncd::processBulkRemoveEntry(
     }
 
     sai_bulk_op_error_mode_t mode = SAI_BULK_OP_ERROR_MODE_IGNORE_ERROR;
-    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
     std::ostringstream oss;
     oss << "Syncd::processBulkRemoveEntry(" << objectTypeStr << ") REMOVE";
     const std::string timerName = oss.str();
@@ -1993,7 +1993,7 @@ sai_status_t Syncd::processBulkSetEntry(
         attr_lists.push_back(attributes[it]->get_attr_list()[0]);
     }
 
-    const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
     std::ostringstream oss;
     oss << "Syncd::processBulkSetEntry(" << objectTypeStr << ") SET";
     const std::string timerName = oss.str();
@@ -2197,7 +2197,7 @@ sai_status_t Syncd::processBulkEntry(
 
         metaKey.objecttype = objectType;
 
-        const char* objectTypeStr = sai_serialize_object_type(objectType).c_str();
+        std::string objectTypeStr(sai_serialize_object_type(objectType));
         std::ostringstream oss;
         oss << "Syncd::processBulkEntry(" << objectTypeStr << ") " << sai_serialize_common_api(api);
         const std::string timerName = oss.str();
