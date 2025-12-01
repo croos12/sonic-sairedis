@@ -3709,8 +3709,16 @@ sai_status_t Syncd::processOidCreate(
 
     sai_object_id_t objectRid;
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidCreate(" << objectTypeStr << ") CREATE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->create(objectType, &objectRid, switchRid, attr_count, attr_list);
-
+    timer.stop();
+    timer.inc();
     if (status == SAI_STATUS_SUCCESS)
     {
         /*
@@ -3765,7 +3773,16 @@ sai_status_t Syncd::processOidRemove(
         m_switches.at(switchVid)->collectPortRelatedObjects(rid);
     }
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidRemove(" << objectTypeStr << ") REMOVE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->remove(objectType, rid);
+    timer.stop();
+    timer.inc();
 
     if (status == SAI_STATUS_SUCCESS)
     {
@@ -3840,7 +3857,16 @@ sai_status_t Syncd::processOidSet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidSet(" << objectTypeStr << ") SET";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->set(objectType, rid, attr);
+    timer.stop();
+    timer.inc();
 
     if (Workaround::isSetAttributeWorkaround(objectType, attr->id, status))
     {
@@ -3863,7 +3889,17 @@ sai_status_t Syncd::processOidGet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
-    return m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidGet(" << objectTypeStr << ") GET";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
+    sai_status_t status = m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    timer.stop();
+    timer.inc();
+    return status;
 }
 
 const char* Syncd::profileGetValue(
