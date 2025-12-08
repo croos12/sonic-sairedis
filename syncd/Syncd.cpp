@@ -3298,7 +3298,11 @@ void Syncd::syncUpdateRedisQuadEvent(
 
     const bool initView = isInitViewMode();
 
-    static PerformanceIntervalTimer timer("Syncd::syncUpdateRedisQuadEvent");
+    std::string objectTypeStr(sai_serialize_object_type(metaKey.objecttype));
+    std::ostringstream oss;
+    oss << "Syncd::syncUpdateRedisQuadEvent(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+    const std::string timerName = oss.str();
+    PerformanceIntervalTimer timer(timerName.c_str());
 
     timer.start();
 
@@ -3374,7 +3378,12 @@ void Syncd::syncUpdateRedisBulkQuadEvent(
     // changes and we only want to apply changes when api succeeded. This
     // applies to init view mode and apply view mode.
 
-    static PerformanceIntervalTimer timer("Syncd::syncUpdateRedisBulkQuadEvent");
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::syncUpdateRedisBulkQuadEvent(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
 
     timer.start();
 
@@ -3550,7 +3559,11 @@ sai_status_t Syncd::processQuadEvent(
     {
         if (info->objecttype == SAI_OBJECT_TYPE_ROUTE_ENTRY)
         {
-            static PerformanceIntervalTimer timer("Syncd::processQuadEvent::processEntry(route_entry)");
+            std::string objectTypeStr(sai_serialize_object_type(metaKey.objecttype));
+            std::ostringstream oss;
+            oss << "Syncd::processQuadEvent::processEntry(" << objectTypeStr << ")";
+            const std::string timerName = oss.str();
+            PerformanceIntervalTimer timer(timerName.c_str());
 
             timer.start();
 
