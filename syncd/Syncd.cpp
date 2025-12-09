@@ -37,6 +37,7 @@
 
 #include <iterator>
 #include <algorithm>
+#include <sstream>
 
 #define DEF_SAI_WARM_BOOT_DATA_FILE "/var/warmboot/sai-warmboot.bin"
 #define SAI_FAILURE_DUMP_SCRIPT "/usr/bin/sai_failure_dump.sh"
@@ -1247,7 +1248,12 @@ sai_status_t Syncd::processBulkCreateEntry(
         attr_counts[idx] = attributes[idx]->get_attr_count();
         attr_lists[idx] = attributes[idx]->get_attr_list();
     }
-
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processBulkCreateEntry(" << objectTypeStr << ") CREATE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -1261,10 +1267,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
-            static PerformanceIntervalTimer timer("Syncd::processBulkCreateEntry(route_entry) CREATE");
-
             timer.start();
-
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1272,9 +1275,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
             timer.stop();
-
             timer.inc(object_count);
         }
         break;
@@ -1290,6 +1291,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].rif_id = m_translator->translateVidToRid(entries[it].rif_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1297,6 +1299,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1311,6 +1315,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].bv_id = m_translator->translateVidToRid(entries[it].bv_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1318,7 +1323,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1333,6 +1339,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1340,7 +1347,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1354,6 +1362,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1361,7 +1370,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1377,6 +1387,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1384,6 +1395,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1398,6 +1411,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1405,6 +1419,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1419,6 +1435,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1426,6 +1443,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1440,6 +1459,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1447,6 +1467,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1484,6 +1506,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].vnet_id = m_translator->translateVidToRid(entries[it].vnet_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1491,6 +1514,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1513,6 +1538,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1528,6 +1555,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].dst_vnet_id = m_translator->translateVidToRid(entries[it].dst_vnet_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1550,6 +1578,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].outbound_port_map_id = m_translator->translateVidToRid(entries[it].outbound_port_map_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1557,6 +1586,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1578,6 +1609,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1593,6 +1626,7 @@ sai_status_t Syncd::processBulkCreateEntry(
                 entries[it].eni_id = m_translator->translateVidToRid(entries[it].eni_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkCreate(
                     object_count,
                     entries.data(),
@@ -1600,6 +1634,8 @@ sai_status_t Syncd::processBulkCreateEntry(
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1628,7 +1664,12 @@ sai_status_t Syncd::processBulkRemoveEntry(
     }
 
     sai_bulk_op_error_mode_t mode = SAI_BULK_OP_ERROR_MODE_IGNORE_ERROR;
-
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processBulkRemoveEntry(" << objectTypeStr << ") REMOVE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -1642,12 +1683,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1662,11 +1705,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].rif_id = m_translator->translateVidToRid(entries[it].rif_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1681,12 +1727,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].bv_id = m_translator->translateVidToRid(entries[it].bv_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1701,12 +1749,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1722,11 +1772,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1740,12 +1793,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1759,12 +1814,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1797,12 +1854,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1817,12 +1876,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].eni_id = m_translator->translateVidToRid(entries[it].eni_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1837,12 +1898,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].vnet_id = m_translator->translateVidToRid(entries[it].vnet_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1857,12 +1920,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].outbound_routing_group_id = m_translator->translateVidToRid(entries[it].outbound_routing_group_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1877,12 +1942,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].dst_vnet_id = m_translator->translateVidToRid(entries[it].dst_vnet_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1897,12 +1964,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].outbound_port_map_id = m_translator->translateVidToRid(entries[it].outbound_port_map_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1916,12 +1985,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1936,12 +2007,14 @@ sai_status_t Syncd::processBulkRemoveEntry(
                 entries[it].eni_id = m_translator->translateVidToRid(entries[it].eni_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkRemove(
                     object_count,
                     entries.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -1979,6 +2052,12 @@ sai_status_t Syncd::processBulkSetEntry(
         attr_lists.push_back(attributes[it]->get_attr_list()[0]);
     }
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processBulkSetEntry(" << objectTypeStr << ") SET";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
     switch ((int)objectType)
     {
         case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -1992,13 +2071,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2013,12 +2094,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].rif_id = m_translator->translateVidToRid(entries[it].rif_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
                     statuses.data());
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2033,13 +2117,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].bv_id = m_translator->translateVidToRid(entries[it].bv_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2054,13 +2140,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2076,12 +2164,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].vr_id = m_translator->translateVidToRid(entries[it].vr_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
-                    statuses.data());
+                    statuses.data()); 
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2095,13 +2186,15 @@ sai_status_t Syncd::processBulkSetEntry(
                 entries[it].switch_id = m_translator->translateVidToRid(entries[it].switch_id);
             }
 
+            timer.start();
             status = m_vendorSai->bulkSet(
                     object_count,
                     entries.data(),
                     attr_lists.data(),
                     mode,
                     statuses.data());
-
+            timer.stop();
+            timer.inc(object_count);
         }
         break;
 
@@ -2172,6 +2265,13 @@ sai_status_t Syncd::processBulkEntry(
 
         metaKey.objecttype = objectType;
 
+        std::string objectTypeStr(sai_serialize_object_type(objectType));
+        std::ostringstream oss;
+        oss << "Syncd::processBulkEntry(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+        const std::string timerName = oss.str();
+        
+        PerformanceIntervalTimer timer(timerName.c_str());
+        timer.start();
         switch ((int)objectType)
         {
             case SAI_OBJECT_TYPE_ROUTE_ENTRY:
@@ -2249,15 +2349,7 @@ sai_status_t Syncd::processBulkEntry(
         {
             if (objectType == SAI_OBJECT_TYPE_ROUTE_ENTRY)
             {
-                static PerformanceIntervalTimer timer("Syncd::processBulkEntry::processEntry(route_entry) CREATE");
-
-                timer.start();
-
                 status = processEntry(metaKey, SAI_COMMON_API_CREATE, attr_count, attr_list);
-
-                timer.stop();
-
-                timer.inc();
             }
             else
             {
@@ -2290,6 +2382,10 @@ sai_status_t Syncd::processBulkEntry(
         }
 
         statuses[idx] = status;
+
+        timer.stop();
+
+        timer.inc();
     }
 
     sendApiResponse(api, all, (uint32_t)objectIds.size(), statuses.data());
@@ -3270,7 +3366,11 @@ void Syncd::syncUpdateRedisQuadEvent(
 
     const bool initView = isInitViewMode();
 
-    static PerformanceIntervalTimer timer("Syncd::syncUpdateRedisQuadEvent");
+    std::string objectTypeStr(sai_serialize_object_type(metaKey.objecttype));
+    std::ostringstream oss;
+    oss << "Syncd::syncUpdateRedisQuadEvent(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+    const std::string timerName = oss.str();
+    PerformanceIntervalTimer timer(timerName.c_str());
 
     timer.start();
 
@@ -3346,7 +3446,12 @@ void Syncd::syncUpdateRedisBulkQuadEvent(
     // changes and we only want to apply changes when api succeeded. This
     // applies to init view mode and apply view mode.
 
-    static PerformanceIntervalTimer timer("Syncd::syncUpdateRedisBulkQuadEvent");
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::syncUpdateRedisBulkQuadEvent(" << objectTypeStr << ") " << sai_serialize_common_api(api);
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
 
     timer.start();
 
@@ -3522,7 +3627,11 @@ sai_status_t Syncd::processQuadEvent(
     {
         if (info->objecttype == SAI_OBJECT_TYPE_ROUTE_ENTRY)
         {
-            static PerformanceIntervalTimer timer("Syncd::processQuadEvent::processEntry(route_entry)");
+            std::string objectTypeStr(sai_serialize_object_type(metaKey.objecttype));
+            std::ostringstream oss;
+            oss << "Syncd::processQuadEvent::processEntry(" << objectTypeStr << ")";
+            const std::string timerName = oss.str();
+            PerformanceIntervalTimer timer(timerName.c_str());
 
             timer.start();
 
@@ -3681,8 +3790,16 @@ sai_status_t Syncd::processOidCreate(
 
     sai_object_id_t objectRid;
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidCreate(" << objectTypeStr << ") CREATE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->create(objectType, &objectRid, switchRid, attr_count, attr_list);
-
+    timer.stop();
+    timer.inc();
     if (status == SAI_STATUS_SUCCESS)
     {
         /*
@@ -3737,7 +3854,16 @@ sai_status_t Syncd::processOidRemove(
         m_switches.at(switchVid)->collectPortRelatedObjects(rid);
     }
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidRemove(" << objectTypeStr << ") REMOVE";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->remove(objectType, rid);
+    timer.stop();
+    timer.inc();
 
     if (status == SAI_STATUS_SUCCESS)
     {
@@ -3812,7 +3938,16 @@ sai_status_t Syncd::processOidSet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidSet(" << objectTypeStr << ") SET";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
     sai_status_t status = m_vendorSai->set(objectType, rid, attr);
+    timer.stop();
+    timer.inc();
 
     if (Workaround::isSetAttributeWorkaround(objectType, attr->id, status))
     {
@@ -3835,7 +3970,17 @@ sai_status_t Syncd::processOidGet(
 
     sai_object_id_t rid = m_translator->translateVidToRid(objectVid);
 
-    return m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    std::string objectTypeStr(sai_serialize_object_type(objectType));
+    std::ostringstream oss;
+    oss << "Syncd::processOidGet(" << objectTypeStr << ") GET";
+    const std::string timerName = oss.str();
+    
+    PerformanceIntervalTimer timer(timerName.c_str());
+    timer.start();
+    sai_status_t status = m_vendorSai->get(objectType, rid, attr_count, attr_list);
+    timer.stop();
+    timer.inc();
+    return status;
 }
 
 const char* Syncd::profileGetValue(
