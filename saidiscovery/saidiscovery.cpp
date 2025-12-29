@@ -270,7 +270,6 @@ static int discover(
                 case SAI_ATTR_VALUE_TYPE_UINT64:
                 case SAI_ATTR_VALUE_TYPE_POINTER:
                 case SAI_ATTR_VALUE_TYPE_BOOL:
-                case SAI_ATTR_VALUE_TYPE_UINT16_RANGE:
                 case SAI_ATTR_VALUE_TYPE_UINT32_RANGE:
                 case SAI_ATTR_VALUE_TYPE_MAC:
                     break;
