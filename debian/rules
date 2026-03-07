@@ -82,3 +82,33 @@ override_dh_installinit:
 
 override_dh_shlibdeps:
 	$(LD_LIBRARY_PATH_CONFIG) dh_shlibdeps -- --ignore-missing-info -xlibsai
+
+ifneq ($(filter syncd,$(DEB_BUILD_PROFILES)),)
+ifneq ($(filter vs,$(DEB_BUILD_PROFILES)),)
+SYNCD_STRIP_PKG =
+SYNCD_DBG_PKG =
+else
+ifneq ($(filter rpc,$(DEB_BUILD_PROFILES)),)
+SYNCD_STRIP_PKG = syncd-rpc
+SYNCD_DBG_PKG = syncd-rpc-dbgsym
+else
+ifneq ($(filter asan,$(DEB_BUILD_PROFILES)),)
+SYNCD_STRIP_PKG = syncd
+SYNCD_DBG_PKG = syncd-asan-dbgsym
+else
+SYNCD_STRIP_PKG = syncd-asan
+SYNCD_DBG_PKG = syncd-dbgsym
+endif
+endif
+endif
+else
+SYNCD_STRIP_PKG =
+SYNCD_DBG_PKG =
+endif
+
+override_dh_strip:
+ifneq ($(SYNCD_STRIP_PKG),)
+	dh_strip -p$(SYNCD_STRIP_PKG) --dbg-package=$(SYNCD_DBG_PKG)
+else
+	dh_strip
+endif
