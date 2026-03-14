@@ -104,6 +104,7 @@ endif
 override_dh_strip:
 ifneq ($(SYNCD_STRIP_PKG),)
 	dh_strip -p$(SYNCD_STRIP_PKG) --dbg-package=$(SYNCD_DBG_PKG)
+	dh_strip --remaining-packages
 else
 	dh_strip
 endif
