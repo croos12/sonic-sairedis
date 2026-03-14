@@ -16,7 +16,7 @@ Description: This package contains sync daemon for SONiC project.
 
 Package: syncd-asan
 Architecture: any
-Build-Profiles: <syncd asan !vs>
+Build-Profiles: <syncd asan !vs !rpc>
 Depends: ${misc:Pre-Depends}
 Recommends: ${shlibs:Depends}
 Conflicts: syncd, syncd-rpc, syncd-vs
@@ -25,7 +25,7 @@ Description: This package contains ASAN-instrumented sync daemon for SONiC proje
 
 Package: syncd-rpc
 Architecture: any
-Build-Profiles: <syncd rpc !vs>
+Build-Profiles: <syncd rpc !vs !asan>
 Depends: ${misc:Pre-Depends}
 Recommends: ${shlibs:Depends}
 Conflicts: syncd, syncd-vs
