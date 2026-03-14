@@ -52,7 +52,7 @@ Description: debugging symbols for syncd
 
 Package: syncd-asan-dbgsym
 Architecture: any
-Build-Profiles: <syncd asan !vs>
+Build-Profiles: <syncd asan !vs !rpc>
 Section: debug
 Priority: extra
 Depends: syncd-asan (= ${binary:Version})
