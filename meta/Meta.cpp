@@ -12,6 +12,29 @@
 
 #include <set>
 
+namespace {
+
+/*
+ * TEMPORARY memory experiment: do not store OUTBOUND_ROUTING_ENTRY or
+ * OUTBOUND_CA_TO_PA_ENTRY in m_saiObjectCollection. Set to false before merge.
+ * Duplicate create detection and attribute OID reference counting for these
+ * types are skipped while enabled; only key struct OIDs are adjusted.
+ */
+constexpr bool META_EXPERIMENT_SKIP_OBJECT_COLLECTION_OUTBOUND_ENTRIES = true;
+
+bool meta_experiment_skip_object_collection_for_type(sai_object_type_t ot)
+{
+    if (!META_EXPERIMENT_SKIP_OBJECT_COLLECTION_OUTBOUND_ENTRIES)
+    {
+        return false;
+    }
+
+    return ot == static_cast<sai_object_type_t>(SAI_OBJECT_TYPE_OUTBOUND_ROUTING_ENTRY)
+        || ot == static_cast<sai_object_type_t>(SAI_OBJECT_TYPE_OUTBOUND_CA_TO_PA_ENTRY);
+}
+
+} // namespace
+
 // TODO add validation for all oids belong to the same switch
 
 #define MAX_LIST_COUNT (0x1<<24) // 16M
@@ -1563,6 +1586,20 @@ sai_status_t Meta::meta_generic_validation_remove(
 
     if (!m_saiObjectCollection.objectExists(meta_key))
     {
+        if (meta_experiment_skip_object_collection_for_type(meta_key.objecttype))
+        {
+            SWSS_LOG_NOTICE(
+                    "META_EXPERIMENT(remove): no Meta local entry for %s; allowing remove (memory experiment)",
+                    sai_serialize_object_meta_key(meta_key).c_str());
+
+            auto info = sai_metadata_get_object_type_info(meta_key.objecttype);
+
+            if (info && info->isnonobjectid)
+            {
+                return SAI_STATUS_SUCCESS;
+            }
+        }
+
         SWSS_LOG_ERROR("object key %s doesn't exist",
                 sai_serialize_object_meta_key(meta_key).c_str());
 
@@ -1866,6 +1903,40 @@ void Meta::meta_generic_validation_post_remove(
          */
 
         clean_after_switch_remove(meta_key.objectkey.key.object_id);
+
+        return;
+    }
+
+    if (meta_experiment_skip_object_collection_for_type(meta_key.objecttype))
+    {
+        /*
+         * Experiment path: object was never stored; only adjust OIDs embedded in
+         * the non-object-id key (create path skipped attr-based OID ref bumps).
+         */
+
+        auto info = sai_metadata_get_object_type_info(meta_key.objecttype);
+
+        if (info && info->isnonobjectid)
+        {
+            for (size_t j = 0; j < info->structmemberscount; ++j)
+            {
+                const sai_struct_member_info_t *m = info->structmembers[j];
+
+                if (m->membervaluetype != SAI_ATTR_VALUE_TYPE_OBJECT_ID)
+                {
+                    continue;
+                }
+
+                m_oids.objectReferenceDecrement(m->getoid(&meta_key));
+            }
+        }
+
+        if (m_saiObjectCollection.objectExists(meta_key))
+        {
+            m_saiObjectCollection.removeObject(meta_key);
+        }
+
+        m_attrKeys.eraseMetaKey(sai_serialize_object_meta_key(meta_key));
 
         return;
     }
@@ -3122,6 +3193,12 @@ sai_status_t Meta::meta_sai_validate_outbound_routing_entry(
         }
     };
 
+    if (meta_experiment_skip_object_collection_for_type(
+                static_cast<sai_object_type_t>(SAI_OBJECT_TYPE_OUTBOUND_ROUTING_ENTRY)))
+    {
+        return SAI_STATUS_SUCCESS;
+    }
+
     if (create)
     {
         if (m_saiObjectCollection.objectExists(meta_key_outbound_routing_entry))
@@ -3167,6 +3244,12 @@ sai_status_t Meta::meta_sai_validate_outbound_ca_to_pa_entry(
             .key = { .outbound_ca_to_pa_entry = *outbound_ca_to_pa_entry }
         }
     };
+
+    if (meta_experiment_skip_object_collection_for_type(
+                static_cast<sai_object_type_t>(SAI_OBJECT_TYPE_OUTBOUND_CA_TO_PA_ENTRY)))
+    {
+        return SAI_STATUS_SUCCESS;
+    }
 
     if (create)
     {
@@ -4475,6 +4558,15 @@ sai_status_t Meta::meta_generic_validation_set(
 
     if (!m_saiObjectCollection.objectExists(meta_key))
     {
+        if (meta_experiment_skip_object_collection_for_type(meta_key.objecttype))
+        {
+            SWSS_LOG_NOTICE(
+                    "META_EXPERIMENT(set): no Meta local entry for %s; returning NOT_SUPPORTED (memory experiment)",
+                    sai_serialize_object_meta_key(meta_key).c_str());
+
+            return SAI_STATUS_NOT_SUPPORTED;
+        }
+
         META_LOG_ERROR(md, "object key %s doesn't exist",
                 sai_serialize_object_meta_key(meta_key).c_str());
 
@@ -4804,6 +4896,15 @@ sai_status_t Meta::meta_generic_validation_get(
 
     if (!m_saiObjectCollection.objectExists(meta_key))
     {
+        if (meta_experiment_skip_object_collection_for_type(meta_key.objecttype))
+        {
+            SWSS_LOG_NOTICE(
+                    "META_EXPERIMENT(get): no Meta local entry for %s; returning NOT_SUPPORTED (memory experiment)",
+                    sai_serialize_object_meta_key(meta_key).c_str());
+
+            return SAI_STATUS_NOT_SUPPORTED;
+        }
+
         SWSS_LOG_ERROR("object key %s doesn't exist",
                 sai_serialize_object_meta_key(meta_key).c_str());
 
@@ -5682,6 +5783,8 @@ void Meta::meta_generic_validation_post_create(
 {
     SWSS_LOG_ENTER();
 
+    const bool skipObjCollection = meta_experiment_skip_object_collection_for_type(meta_key.objecttype);
+
     bool connectToSwitch = false;
 
     if (meta_key.objecttype == SAI_OBJECT_TYPE_SWITCH)
@@ -5723,6 +5826,12 @@ void Meta::meta_generic_validation_post_create(
     else if (connectToSwitch)
     {
         // don't create object, since it already exists and we are connecting to existing switch
+    }
+    else if (skipObjCollection)
+    {
+        SWSS_LOG_NOTICE(
+                "META_EXPERIMENT(create): not storing %s in m_saiObjectCollection (memory experiment)",
+                sai_serialize_object_meta_key(meta_key).c_str());
     }
     else
     {
@@ -5829,6 +5938,8 @@ void Meta::meta_generic_validation_post_create(
         m_warmBoot = false;
     }
 
+    if (!skipObjCollection)
+    {
     bool haskeys = false;
 
     for (uint32_t idx = 0; idx < attr_count; ++idx)
@@ -5994,6 +6105,7 @@ void Meta::meta_generic_validation_post_create(
         auto attrKey = AttrKeyMap::constructKey(switch_id, meta_key, attr_count, attr_list);
 
         m_attrKeys.insert(mKey, attrKey);
+    }
     }
 }
 
